@@ -54,6 +54,12 @@ button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
+tasktab {
+  padding: 50%;
+  background-color: #213547;
+  box-shadow: #1a1a1a;
+}
+
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;
@@ -66,3 +72,5 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+
