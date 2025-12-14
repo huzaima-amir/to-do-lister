@@ -1,4 +1,4 @@
-module database
+module to-do-lister
 
 go 1.25.4
 

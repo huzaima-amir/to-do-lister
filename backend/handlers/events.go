@@ -3,7 +3,7 @@ package handlers
 import (
 	"time"
 	"gorm.io/gorm"
-	"database/models"
+	"to-do-lister/models"
   )
 
 func CreateEvent(db *gorm.DB, title, description string, startAt, endAt time.Time, location string, online bool) uint { // create new event

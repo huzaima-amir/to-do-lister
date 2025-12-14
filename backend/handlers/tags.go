@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"database/models"
+	"to-do-lister/models"
 	"gorm.io/gorm"
 )
 
