@@ -32,10 +32,11 @@ func StartTask(db *gorm.DB, taskid uint) error {
     return db.Save(&task).Error
 }
 
+
 func EndTask(db *gorm.DB, taskid uint) error {
     var task models.Task
     if err := db.First(&task, taskid).Error; err != nil {
-        return err // task not found
+        return err // if task not found
     }
 
     //only allow end if task is In Progress
@@ -43,10 +44,23 @@ func EndTask(db *gorm.DB, taskid uint) error {
         return fmt.Errorf("cannot end task that hasn't started")
     }
 
+    //mark task as finished
     task.FinishedAt = time.Now()
     task.Status = "Finished"
-    return db.Save(&task).Error
+    if err := db.Save(&task).Error; err != nil {
+        return err
+    }
+
+    //masscomplete all subtasks for this task
+    if err := db.Model(&models.TaskSubTask{}).
+        Where("task_id = ?", taskid).
+        Update("checked", true).Error; err != nil {
+        return err
+    }
+
+    return nil
 }
+
 
 func DeleteTask(db *gorm.DB, taskid uint){ 
   db.Delete(&models.Task{}, taskid)
