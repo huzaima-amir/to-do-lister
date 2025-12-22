@@ -4,13 +4,13 @@ import (
 	"time"
 	"gorm.io/gorm"
 	"to-do-lister/models"
-  "fmt"
+    "fmt"
 )
 
 func CreateTask(db *gorm.DB, title,description string, deadline time.Time) uint { // creating new task - works
   task := models.Task{Title: title,Description: description, Deadline: deadline, Status: "Pending"}
   db.Create(&task)
-  return task.ID
+  return task.ID  // check user ID, needs to set the defualt values !!!TODO
 }
 
 func StartTask(db *gorm.DB, taskid uint) error {
@@ -68,17 +68,20 @@ func DeleteTask(db *gorm.DB, taskid uint){
 
 func AddSubtaskToTask(db *gorm.DB, pTaskID uint, title string) { // adding subtask to the subtaskchecklist in a specific task
   subTask := models.TaskSubTask{Title:title, Checked: false, TaskID: pTaskID}
-  db.Create(&subTask)
+  db.Create(&subTask) // only add to task that isnt finished yet !!!TODO
 }
 
 func DeleteTaskSubtaskByTask(db *gorm.DB, taskID, subtaskID uint) error {
     return db.Where("id = ? AND task_id = ?", subtaskID, taskID). //check parent first?
-        Delete(&models.TaskSubTask{}).Error
+        Delete(&models.TaskSubTask{}).Error  // only edit subtasks for task that isnt finished yet. !!!TODO
 }
 
 // to mark subtask as checked or unchecked:
 func ToggleTaskSubtaskByTask(db *gorm.DB, taskID, subtaskID uint, checked bool) error {
     return db.Model(&models.TaskSubTask{}).
         Where("id = ? AND task_id = ?", subtaskID, taskID).
-        Update("checked", checked).Error
+        Update("checked", checked).Error // only allow subtask edit if parent task isnt finished yet !!!TODO
 }
+
+// Need to add new goroutine and function to update task overdue status 
+// if task deadline passes before task finished-  !!!TODO

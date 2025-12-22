@@ -1,19 +1,19 @@
 package main
 
 import (
-   // "encoding/json"
-   // "fmt"
+ //   "encoding/json"
+    "fmt"
     "log"
-   // "net/http"
-  //  "os"
-   // "time"
+    "net/http"
+    "os"
+//    "time"
 
-  //  "github.com/go-chi/chi/v5"
-   // "github.com/go-chi/chi/v5/middleware"
+    "github.com/go-chi/chi/v5"
+    "github.com/go-chi/chi/v5/middleware"
     "gorm.io/driver/postgres"
     "gorm.io/gorm"
 
-//    "to-do-lister/services"
+   // "to-do-lister/services"
     "to-do-lister/models"
 )
 
@@ -37,4 +37,18 @@ func main() {
         log.Fatal("failed to migrate:", err)
     }
 
+    // Chi router
+    r := chi.NewRouter()
+    r.Use(middleware.Logger)
+    r.Use(middleware.Recoverer)
+
+   
+    // Run server
+    port := os.Getenv("PORT")
+    if port == "" {
+        port = "8080"
+    }
+
+    fmt.Println("Server running on port", port)
+    http.ListenAndServe(":"+port, r)
 }

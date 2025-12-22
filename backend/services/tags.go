@@ -14,7 +14,7 @@ func CreateTag(db *gorm.DB, title, desc string) uint {
 func DeleteTag (db *gorm.DB, tagID uint){ 
 	db.Model(&models.Task{}).Association("Tags").Clear()  
 	db.Model(&models.Event{}).Association("Tags").Clear()
-	db.Delete(&models.Tag{}, tagID)
+	db.Delete(&models.Tag{}, tagID)  
 }
 
 
@@ -23,20 +23,20 @@ func AddTagToTask(db *gorm.DB, taskID, tagID uint) {
     var tag models.Tag
     db.First(&task, taskID)
     db.First(&tag, tagID)
-    db.Model(&task).Association("Tags").Append(&tag)
+    db.Model(&task).Association("Tags").Append(&tag) // should only work if task isnt finished... !!!TODO
 }
 
 
-func RemoveTagFromTask(db *gorm.DB, taskID, tagID uint) {
+func RemoveTagFromTask(db *gorm.DB, taskID, tagID uint) { // should only work if task isnt finished !!!TODO
     var task models.Task
     var tag models.Tag
     db.First(&task, taskID)
     db.First(&tag, tagID)
-    db.Model(&task).Association("Tags").Delete(&tag)
+    db.Model(&task).Association("Tags").Delete(&tag)  
 }
 
 
-func AddTagToEvent(db *gorm.DB, eventID, tagID uint) {
+func AddTagToEvent(db *gorm.DB, eventID, tagID uint) { // should only work if event isnt finished !!!TODO
     var event models.Event
     var tag models.Tag
     db.First(&event, eventID)
@@ -45,7 +45,7 @@ func AddTagToEvent(db *gorm.DB, eventID, tagID uint) {
 }
 
 
-func RemoveTagFromEvent(db *gorm.DB, eventID, tagID uint) {
+func RemoveTagFromEvent(db *gorm.DB, eventID, tagID uint) { // should only work if event isnt finished !!!TODO
     var event models.Event
     var tag models.Tag
     db.First(&event, eventID)
