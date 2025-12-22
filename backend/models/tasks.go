@@ -7,6 +7,7 @@ import (
 
 type Task struct {
   ID          uint   `gorm:"primaryKey"`
+  UserID      uint `gorm:"not null"`
   Title       string
   Description string
   SubTaskCheckList []TaskSubTask `gorm:"foreignKey:TaskID;constraint:OnDelete:CASCADE;"`

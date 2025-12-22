@@ -6,6 +6,7 @@ import (
 
 type Event struct {
   ID          uint   `gorm:"primaryKey"`
+  UserID      uint `gorm:"not null"`
   Title       string
   Description string
   StartsAt    time.Time

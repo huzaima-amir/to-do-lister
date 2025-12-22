@@ -1,33 +1,24 @@
-import { useEffect, useState } from "react";
+// App.jsx
+import React, { useEffect, useState } from "react";
+import TaskBoard from "./components/TaskBoard";
+import { fetchTasks } from "./services/taskService";
 
 function App() {
   const [tasks, setTasks] = useState([]);
 
+  // load tasks from backend when app starts
   useEffect(() => {
-    fetch("http://localhost:8080/tasks")
-      .then(res => res.json())
-      .then(data => setTasks(data));
+    const loadTasks = async () => {
+      const data = await fetchTasks();
+      setTasks(data);
+    };
+    loadTasks();
   }, []);
 
-  const addTask = async () => {
-    const res = await fetch("http://localhost:8080/tasks", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title: "New Task", status: "Pending" })
-    });
-    const newTask = await res.json();
-    setTasks([...tasks, newTask]);
-  };
-
   return (
-    <div>
-      <h1>Tasks</h1>
-      <ul>
-        {tasks.map(t => (
-          <li key={t.id}>{t.title} - {t.status}</li>
-        ))}
-      </ul>
-      <button onClick={addTask}>Add Task</button>
+    <div className="app">
+      <h1>Task Manager</h1>
+      <TaskBoard tasks={tasks} />
     </div>
   );
 }
