@@ -17,6 +17,7 @@ import (
     "to-do-lister/models"
 )
 
+
 func main() {
     // Connection to PostgreSQL db
     dsn := "user=postgres password=ghq92DAU712.9dn dbname=todolister host=localhost port=5432 sslmode=disable"
@@ -26,7 +27,8 @@ func main() {
     }
 
     // Models automigration
-    err = db.AutoMigrate(
+    err = db.AutoMigrate( 
+        &models.User{},
         &models.Task{},
         &models.TaskSubTask{},
         &models.Event{},

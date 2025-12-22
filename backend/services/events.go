@@ -35,3 +35,8 @@ func ToggleEventSubtaskByEvent(db *gorm.DB, eventID, subtaskID uint, checked boo
 }
 
 //  need a new function goroutine  that checks in parallel if event has started and ended to update status accordingly !!!TODO
+
+func checkEventStatus(){ // background function that runs in a goroutine forever(for how long the code runs) 
+// and updates event status according to passage of time compared to start time and end time
+
+}

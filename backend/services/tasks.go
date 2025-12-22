@@ -7,16 +7,16 @@ import (
     "fmt"
 )
 
-func CreateTask(db *gorm.DB, title,description string, deadline time.Time) uint { // creating new task - works
+func CreateTask(db *gorm.DB, title,description string, deadline time.Time, userID uint) uint { // creating new task - works
   task := models.Task{Title: title,Description: description, Deadline: deadline, Status: "Pending"}
   db.Create(&task)
-  return task.ID  // check user ID, needs to set the defualt values !!!TODO
+  return task.ID  // check user ID, needs to set the defualt values !!!TODO  , check userID in handlers and middleware 
 }
 
 func StartTask(db *gorm.DB, taskid uint) error {
     var task models.Task
     if err := db.First(&task, taskid).Error; err != nil {
-        return err // task not found
+        return fmt.Errorf("task not found") // task not found
     }
 
     // Only allow start if task is Pending
@@ -36,7 +36,7 @@ func StartTask(db *gorm.DB, taskid uint) error {
 func EndTask(db *gorm.DB, taskid uint) error {
     var task models.Task
     if err := db.First(&task, taskid).Error; err != nil {
-        return err // if task not found
+        return fmt.Errorf("task not found") // if task not found
     }
 
     //only allow end if task is In Progress
@@ -61,27 +61,66 @@ func EndTask(db *gorm.DB, taskid uint) error {
     return nil
 }
 
-
 func DeleteTask(db *gorm.DB, taskid uint){ 
   db.Delete(&models.Task{}, taskid)
 }
 
-func AddSubtaskToTask(db *gorm.DB, pTaskID uint, title string) { // adding subtask to the subtaskchecklist in a specific task
-  subTask := models.TaskSubTask{Title:title, Checked: false, TaskID: pTaskID}
-  db.Create(&subTask) // only add to task that isnt finished yet !!!TODO
+func AddSubtaskToTask(db *gorm.DB, pTaskID uint, title string) error {
+    var task models.Task
+    if err := db.First(&task, pTaskID).Error; err != nil { //load the task from DB
+        return fmt.Errorf("task not found")
+    }
+    //prevent adding subtasks to finished tasks 
+    if task.Status == "Finished" {
+        return fmt.Errorf("cannot add subtasks to a finished task")
+    }
+    //create the subtask
+    subTask := models.TaskSubTask{
+        Title:  title,
+        Checked: false,
+        TaskID: pTaskID,
+    }
+
+    return db.Create(&subTask).Error
 }
 
+
 func DeleteTaskSubtaskByTask(db *gorm.DB, taskID, subtaskID uint) error {
-    return db.Where("id = ? AND task_id = ?", subtaskID, taskID). //check parent first?
-        Delete(&models.TaskSubTask{}).Error  // only edit subtasks for task that isnt finished yet. !!!TODO
+    var task models.Task
+    if err := db.First(&task, taskID).Error; err != nil {
+        return fmt.Errorf("task not found")
+    }
+    // prevent edition of finished task's subtasks
+    if task.Status == "Finished" {
+        return fmt.Errorf("cannot delete subtasks from a finished task")
+    }
+    return db.Where("id = ? AND task_id = ?", subtaskID, taskID). 
+        Delete(&models.TaskSubTask{}).Error 
 }
 
 // to mark subtask as checked or unchecked:
 func ToggleTaskSubtaskByTask(db *gorm.DB, taskID, subtaskID uint, checked bool) error {
+    var task models.Task
+    if err := db.First(&task, taskID).Error; err != nil {
+        return fmt.Errorf("task not found")
+    }
+    // prevent edition of finished task's subtasks
+    if task.Status == "Finished" {
+// only displaying error for unchecking, because finishing a task automatically masschecks all subtasks, so there are none left to check
+        return fmt.Errorf("cannot uncheck subtasks from a finished task") 
+    }
     return db.Model(&models.TaskSubTask{}).
         Where("id = ? AND task_id = ?", subtaskID, taskID).
-        Update("checked", checked).Error // only allow subtask edit if parent task isnt finished yet !!!TODO
+        Update("checked", checked).Error 
 }
 
 // Need to add new goroutine and function to update task overdue status 
-// if task deadline passes before task finished-  !!!TODO
+// if task deadline passes before task finished-  
+
+func checkTaskOverdueStatus(db *gorm.DB){// background function that runs in a goroutine forever(for how long the code runs) 
+// and marks task as overdue if applicable
+// putting the logic in this function, but will initialize the goroutine with the forloop in the main function (database intialization issues)
+    db.Model(&models.Task{}).Where("status != ?", "Finished").Where("deadline < ?", time.Now)
+
+}
+

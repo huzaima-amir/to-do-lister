@@ -1,28 +1,24 @@
 package routes
 
 import (
-	  "encoding/json"
+    "encoding/json"
     "fmt"
-    "log"
     "net/http"
-    "os"
-	"time"
+    "time"
 
     "github.com/go-chi/chi/v5"
     "github.com/go-chi/chi/v5/middleware"
-    "gorm.io/driver/postgres"
     "gorm.io/gorm"
 
     "to-do-lister/services"
-    "to-do-lister/models"
 )
 
-	    // Chi router
-	var r = chi.NewRouter()
+func NewRouter(db *gorm.DB) *chi.Mux {
+    r := chi.NewRouter()
+
     r.Use(middleware.Logger)
     r.Use(middleware.Recoverer)
 
- // Routes
     r.Post("/tasks", func(w http.ResponseWriter, r *http.Request) {
         var input struct {
             Title       string    `json:"title"`
@@ -35,11 +31,8 @@ import (
             return
         }
 
-        id := services.CreateTask(db, input.Title, input.Description, input.Deadline)
-
-        json.NewEncoder(w).Encode(map[string]interface{}{
-            "id": id,
-        })
+        id := services.CreateTask(db, input.Title, input.Description, input.Deadline,9)
+        json.NewEncoder(w).Encode(map[string]interface{}{"id": id})
     })
 
     r.Put("/tasks/{id}/start", func(w http.ResponseWriter, r *http.Request) {
@@ -52,9 +45,7 @@ import (
             return
         }
 
-        json.NewEncoder(w).Encode(map[string]string{
-            "status": "started",
-        })
+        json.NewEncoder(w).Encode(map[string]string{"status": "started"})
     })
 
     r.Put("/tasks/{id}/end", func(w http.ResponseWriter, r *http.Request) {
@@ -67,9 +58,7 @@ import (
             return
         }
 
-        json.NewEncoder(w).Encode(map[string]string{
-            "status": "finished",
-        })
+        json.NewEncoder(w).Encode(map[string]string{"status": "finished"})
     })
 
     r.Delete("/tasks/{id}", func(w http.ResponseWriter, r *http.Request) {
@@ -78,9 +67,8 @@ import (
         fmt.Sscan(idStr, &id)
 
         services.DeleteTask(db, id)
-
-        json.NewEncoder(w).Encode(map[string]string{
-            "status": "deleted",
-        })
+        json.NewEncoder(w).Encode(map[string]string{"status": "deleted"})
     })
-	http.ListenAndServe(":8080", r)
+
+    return r
+}
