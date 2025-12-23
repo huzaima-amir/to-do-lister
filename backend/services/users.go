@@ -76,3 +76,21 @@ func ChangePassword(db *gorm.DB, userID uint, oldPassword, newPassword string) e
     return db.Model(&user).Update("password", string(hashed)).Error
 }
 
+func ValidateUserCredentials(db *gorm.DB, username, password string) (uint, error) { // helper for loginhandler
+    var user models.User
+
+    // Find user by username, in db
+    if err := db.Where("user_name = ?", username).First(&user).Error; err != nil {
+        if err == gorm.ErrRecordNotFound {
+            return 0, fmt.Errorf("invalid username or password")
+        }
+        return 0, err
+    }
+    //compare hashed password with provided password
+    if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
+        return 0, fmt.Errorf("invalid username or password")
+    }
+
+    // Return user ID if valid
+    return user.ID, nil
+}

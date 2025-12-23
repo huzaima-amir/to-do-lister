@@ -1,24 +1,21 @@
 package main
 
 import (
- //   "encoding/json"
-    "fmt"
-    "log"
-    "net/http"
-    "os"
-    "time"
+	"log"
+	"net/http"
 
-    "github.com/go-chi/chi/v5"
-    "github.com/go-chi/chi/v5/middleware"
-    "gorm.io/driver/postgres"
-    "gorm.io/gorm"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/cors"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 
-    "to-do-lister/services"
-    "to-do-lister/models"
+	"to-do-lister/models"
+	"to-do-lister/routes"
 )
 
-
 func main() {
+
     // Connection to postgres db
     dsn := "user=postgres password=ghq92DAU712.9dn dbname=todolister host=localhost port=5432 sslmode=disable"
     db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
@@ -39,27 +36,30 @@ func main() {
         log.Fatal("failed to migrate:", err)
     }
 
-    // Chi router
+    // Create router
     r := chi.NewRouter()
+
+    // Global middleware
     r.Use(middleware.Logger)
     r.Use(middleware.Recoverer)
 
-   
-    // Run server
-    port := os.Getenv("PORT")
-    if port == "" {
-        port = "8080"
-    }
 
-    fmt.Println("Server running on port", port)
-    http.ListenAndServe(":"+port, r)
+    r.Use(cors.Handler(cors.Options{
+        AllowedOrigins:   []string{"http://localhost:3000"},
+        AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+        AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type"},
+        ExposedHeaders:   []string{"Link"},
+        AllowCredentials: true,
+        MaxAge:           300,
+    }))
 
-    //Goroutine to check and update tasks overdue status as a background function 
-    go func() {
-    for {
-        services.UpdateTaskOverdueStatus(db)
-        time.Sleep(5 * time.Second)
-    }
-}()
+    // Mount route groups
+    r.Route("/users", func(ur chi.Router) {
+        routes.UserRoutes(ur, db)
+    })
+
+    //start server
+    log.Println("Server running on :8080")
+    http.ListenAndServe(":8080", r)
 
 }

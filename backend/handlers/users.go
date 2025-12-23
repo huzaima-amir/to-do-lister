@@ -10,7 +10,7 @@ import (
 "to-do-lister/utils"
 )
 
-func CreateUserHandler(db *gorm.DB) http.HandlerFunc {
+func SignUpHandler(db *gorm.DB) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         var input struct {
             Name     string `json:"name"`
