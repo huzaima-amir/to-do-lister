@@ -7,10 +7,24 @@ import (
     "fmt"
 )
 
-func CreateTask(db *gorm.DB, title,description string, deadline time.Time, userID uint) uint { // creating new task - works
-  task := models.Task{Title: title,Description: description, Deadline: deadline, Status: "Pending"}
-  db.Create(&task)
-  return task.ID  // check user ID, needs to set the defualt values !!!TODO  , check userID in handlers and middleware 
+func CreateTask(db *gorm.DB, title,description string, deadline time.Time, userID uint) (uint, error) { // creating new task for specific user
+    var user models.User 
+    if err := db.First(&user, userID).Error; err != nil {
+        return 0, fmt.Errorf("user not found") 
+    }
+    task := models.Task{ 
+        Title: title, 
+        Description: description, 
+        Deadline: deadline, 
+        Status: "Pending", //default value untill task starts
+        Overdue: false, //default value before task gets overdue
+        UserID: userID, 
+        // StartedAt and FinishedAt will be default zero values
+    }
+    if err := db.Create(&task).Error; err != nil { 
+        return 0, err 
+        } 
+    return task.ID, nil
 }
 
 func StartTask(db *gorm.DB, taskid uint) error {
@@ -70,17 +84,18 @@ func AddSubtaskToTask(db *gorm.DB, pTaskID uint, title string) error {
     if err := db.First(&task, pTaskID).Error; err != nil { //load the task from DB
         return fmt.Errorf("task not found")
     }
+
     //prevent adding subtasks to finished tasks 
     if task.Status == "Finished" {
         return fmt.Errorf("cannot add subtasks to a finished task")
     }
+
     //create the subtask
     subTask := models.TaskSubTask{
         Title:  title,
         Checked: false,
         TaskID: pTaskID,
     }
-
     return db.Create(&subTask).Error
 }
 
@@ -106,7 +121,8 @@ func ToggleTaskSubtaskByTask(db *gorm.DB, taskID, subtaskID uint, checked bool) 
     }
     // prevent edition of finished task's subtasks
     if task.Status == "Finished" {
-// only displaying error for unchecking, because finishing a task automatically masschecks all subtasks, so there are none left to check
+// only displaying error for unchecking, because finishing a task automatically masschecks all subtasks, 
+// so there are none left to check
         return fmt.Errorf("cannot uncheck subtasks from a finished task") 
     }
     return db.Model(&models.TaskSubTask{}).
@@ -117,10 +133,12 @@ func ToggleTaskSubtaskByTask(db *gorm.DB, taskID, subtaskID uint, checked bool) 
 // Need to add new goroutine and function to update task overdue status 
 // if task deadline passes before task finished-  
 
-func checkTaskOverdueStatus(db *gorm.DB){// background function that runs in a goroutine forever(for how long the code runs) 
+func UpdateTaskOverdueStatus(db *gorm.DB) error{// background function that runs in a goroutine for"ever"(for how long the code runs) 
 // and marks task as overdue if applicable
 // putting the logic in this function, but will initialize the goroutine with the forloop in the main function (database intialization issues)
-    db.Model(&models.Task{}).Where("status != ?", "Finished").Where("deadline < ?", time.Now)
-
+    return db.Model(&models.Task{}). 
+        Where("status != ?", "Finished").
+        Where("deadline < ?", time.Now()).  //comparison operator for time.time only works in sql operations!!
+        Update("overdue", true).Error
 }
 

@@ -7,4 +7,6 @@ type Tag struct { // Many-to-Many, cause Events and Tasks can use multiple tags,
   Description string
   Events      []Event `gorm:"many2many:event_tags;"`
   Tasks       []Task  `gorm:"many2many:task_tags;"`
+  UserID      uint   
+  User        User    `gorm:"constraint:OnDelete:CASCADE;"`
 }

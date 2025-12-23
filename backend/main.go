@@ -6,27 +6,27 @@ import (
     "log"
     "net/http"
     "os"
-//    "time"
+    "time"
 
     "github.com/go-chi/chi/v5"
     "github.com/go-chi/chi/v5/middleware"
     "gorm.io/driver/postgres"
     "gorm.io/gorm"
 
-   // "to-do-lister/services"
+    "to-do-lister/services"
     "to-do-lister/models"
 )
 
 
 func main() {
-    // Connection to PostgreSQL db
+    // Connection to postgres db
     dsn := "user=postgres password=ghq92DAU712.9dn dbname=todolister host=localhost port=5432 sslmode=disable"
     db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
     if err != nil {
         log.Fatal("failed to connect database:", err)
     }
 
-    // Models automigration
+    // models automigration
     err = db.AutoMigrate( 
         &models.User{},
         &models.Task{},
@@ -53,4 +53,13 @@ func main() {
 
     fmt.Println("Server running on port", port)
     http.ListenAndServe(":"+port, r)
+
+    //Goroutine to check and update tasks overdue status as a background function 
+    go func() {
+    for {
+        services.UpdateTaskOverdueStatus(db)
+        time.Sleep(5 * time.Second)
+    }
+}()
+
 }
