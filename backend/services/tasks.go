@@ -46,7 +46,6 @@ func StartTask(db *gorm.DB, taskid uint) error {
     return db.Save(&task).Error
 }
 
-
 func EndTask(db *gorm.DB, taskid uint) error {
     var task models.Task
     if err := db.First(&task, taskid).Error; err != nil {
@@ -75,8 +74,8 @@ func EndTask(db *gorm.DB, taskid uint) error {
     return nil
 }
 
-func DeleteTask(db *gorm.DB, taskid uint){ 
-  db.Delete(&models.Task{}, taskid)
+func DeleteTask(db *gorm.DB, taskid uint) error { 
+  return db.Delete(&models.Task{}, taskid).Error
 }
 
 func AddSubtaskToTask(db *gorm.DB, pTaskID uint, title string) error {
@@ -129,9 +128,6 @@ func ToggleTaskSubtaskByTask(db *gorm.DB, taskID, subtaskID uint, checked bool) 
         Where("id = ? AND task_id = ?", subtaskID, taskID).
         Update("checked", checked).Error 
 }
-
-// Need to add new goroutine and function to update task overdue status 
-// if task deadline passes before task finished-  
 
 func UpdateTaskOverdueStatus(db *gorm.DB) error{// background function that runs in a goroutine for"ever"(for how long the code runs) 
 // and marks task as overdue if applicable

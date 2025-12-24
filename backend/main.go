@@ -11,8 +11,9 @@ import (
 
 	"to-do-lister/models"
 	"to-do-lister/routes"
+    
     chimw "github.com/go-chi/chi/v5/middleware"  // golang chi package middleware
-    custommw  "to-do-lister/middleware"   //custom middleware
+    custommw  "to-do-lister/middleware"        //custom middleware
 )
 
 func main() {
@@ -40,15 +41,10 @@ func main() {
     // Create router
     r := chi.NewRouter()
 
-    // Global middleware
+    //middleware
     r.Use(custommw.Cors())
     r.Use(chimw.Logger)
     r.Use(chimw.Recoverer)
-    
-
-     r.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
-    w.Write([]byte("pong"))
-})
 
     // Mount route groups
     r.Route("/users", func(ur chi.Router) {

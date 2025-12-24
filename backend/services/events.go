@@ -28,8 +28,8 @@ func CreateEvent(db *gorm.DB, title, description string, startAt, endAt time.Tim
   return event.ID, nil
 }
 
-func DeleteEvent(db *gorm.DB, eventid uint){ 
-  db.Delete(&models.Event{}, eventid)
+func DeleteEvent(db *gorm.DB, eventid uint) error { 
+  return db.Delete(&models.Event{}, eventid).Error
 }
 
 func AddSubtaskToEvent(db *gorm.DB, eventID uint, title string) error { // adding subtask to the subtaskchecklist in a specific event

@@ -34,7 +34,7 @@ func SignUpHandler(db *gorm.DB) http.HandlerFunc {
 }
 
 
-func LoginHandler(db *gorm.DB) http.HandlerFunc {
+func LogInHandler(db *gorm.DB) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         var input struct {
             UserName string `json:"username"`
@@ -63,8 +63,13 @@ func LoginHandler(db *gorm.DB) http.HandlerFunc {
 }
 
 
-func LogOutHandler(){
-	//TODO!!!
+func LogOutHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(map[string]string{
+			"message" : "logged out",
+		})
+	}
 }
 
 func DeleteUserHandler(db *gorm.DB) http.HandlerFunc {
