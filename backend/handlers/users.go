@@ -64,7 +64,7 @@ func LoginHandler(db *gorm.DB) http.HandlerFunc {
 
 
 func LogOutHandler(){
-	
+	//TODO!!!
 }
 
 func DeleteUserHandler(db *gorm.DB) http.HandlerFunc {

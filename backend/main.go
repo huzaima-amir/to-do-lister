@@ -5,13 +5,14 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
-	"github.com/go-chi/cors"
+//	"github.com/go-chi/cors"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
 	"to-do-lister/models"
 	"to-do-lister/routes"
+    chimw "github.com/go-chi/chi/v5/middleware"  // golang chi package middleware
+    custommw  "to-do-lister/middleware"   //custom middleware
 )
 
 func main() {
@@ -40,18 +41,14 @@ func main() {
     r := chi.NewRouter()
 
     // Global middleware
-    r.Use(middleware.Logger)
-    r.Use(middleware.Recoverer)
+    r.Use(custommw.Cors())
+    r.Use(chimw.Logger)
+    r.Use(chimw.Recoverer)
+    
 
-
-    r.Use(cors.Handler(cors.Options{
-        AllowedOrigins:   []string{"http://localhost:3000"},
-        AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-        AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type"},
-        ExposedHeaders:   []string{"Link"},
-        AllowCredentials: true,
-        MaxAge:           300,
-    }))
+     r.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
+    w.Write([]byte("pong"))
+})
 
     // Mount route groups
     r.Route("/users", func(ur chi.Router) {
