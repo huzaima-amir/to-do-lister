@@ -15,7 +15,7 @@ func UserRoutes(r chi.Router, db *gorm.DB) {
     r.Post("/logout", handlers.LogOutHandler())
 
 
-    //protected endpoints for user detail edits and 
+    //protected endpoints for user detail edits
     r.Group(func(pr chi.Router) {
         pr.Use(middleware.AuthMiddleware)
 

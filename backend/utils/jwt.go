@@ -7,9 +7,9 @@ import (
     "github.com/golang-jwt/jwt/v5"
 )
 
-var jwtSecret = []byte("SUPER_SECRET_KEY_CHANGE_THIS") // move to env later
+var jwtSecret = []byte("SUPER_SECRET_KEY") // move to env later?
 
-// GenerateJWT creates a signed token containing the userID
+// create a signed token containing the userID
 func GenerateJWT(userID uint) (string, error) {
     claims := jwt.MapClaims{
         "user_id": userID,
@@ -21,7 +21,7 @@ func GenerateJWT(userID uint) (string, error) {
     return token.SignedString(jwtSecret)
 }
 
-// ValidateJWT verifies the token and extracts the userID
+// Verify the token and extract the userID
 func ValidateJWT(tokenString string) (uint, error) {
     token, err := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
         // Ensure token is signed with HS256
@@ -40,8 +40,9 @@ func ValidateJWT(tokenString string) (uint, error) {
         return 0, errors.New("invalid token claims")
     }
 
-    // Extract userID
-    userIDFloat, ok := claims["user_id"].(float64)
+    
+    // extract userID
+    userIDFloat, ok := claims["user_id"].(float64)  
     if !ok {
         return 0, errors.New("invalid user_id in token")
     }

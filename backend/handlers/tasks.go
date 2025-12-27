@@ -43,7 +43,7 @@ func GetTasksHandler(db *gorm.DB) http.HandlerFunc {
 
         var tasks []models.Task
 
-        // Load tasks + subtasks
+        // load tasks + subtasks
         if err := db.Preload("SubTasks").
             Where("user_id = ?", userID).
             Order("deadline ASC").
@@ -84,10 +84,24 @@ func GetTaskByIDHandler(db *gorm.DB) http.HandlerFunc {
 
 func StartTaskHandler(db *gorm.DB) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
-        taskIDStr := chi.URLParam(r, "taskID")
-        taskID, _ := strconv.ParseUint(taskIDStr, 10, 64)
+        userID := r.Context().Value("userID").(uint) 
 
-        if err := services.StartTask(db, uint(taskID)); err != nil {
+        taskIDStr := chi.URLParam(r, "taskID")
+        taskIDUint64, err := strconv.ParseUint(taskIDStr, 10, 64)
+        if err != nil {
+            http.Error(w, "invalid task ID", http.StatusBadRequest)
+            return
+        }
+        taskID := uint(taskIDUint64)
+
+        // user ownership check
+        var task models.Task
+        if err := db.Where("id = ? AND user_id = ?", taskID, userID).First(&task).Error; err != nil {
+            http.Error(w, "task not found", http.StatusNotFound)
+            return
+        }
+
+        if err := services.StartTask(db, taskID); err != nil {
             http.Error(w, err.Error(), http.StatusBadRequest)
             return
         }
@@ -95,13 +109,28 @@ func StartTaskHandler(db *gorm.DB) http.HandlerFunc {
         w.WriteHeader(http.StatusOK)
     }
 }
+
 
 func EndTaskHandler(db *gorm.DB) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
-        taskIDStr := chi.URLParam(r, "taskID")
-        taskID, _ := strconv.ParseUint(taskIDStr, 10, 64)
+        userID := r.Context().Value("userID").(uint)
 
-        if err := services.EndTask(db, uint(taskID)); err != nil {
+        taskIDStr := chi.URLParam(r, "taskID")
+        taskIDUint64, err := strconv.ParseUint(taskIDStr, 10, 64)
+        if err != nil {
+            http.Error(w, "invalid task ID", http.StatusBadRequest)
+            return
+        }
+        taskID := uint(taskIDUint64)
+
+        //user ownership check
+        var task models.Task
+        if err := db.Where("id = ? AND user_id = ?", taskID, userID).First(&task).Error; err != nil {
+            http.Error(w, "task not found", http.StatusNotFound)
+            return
+        }
+
+        if err := services.EndTask(db, taskID); err != nil {
             http.Error(w, err.Error(), http.StatusBadRequest)
             return
         }
@@ -110,12 +139,27 @@ func EndTaskHandler(db *gorm.DB) http.HandlerFunc {
     }
 }
 
+
 func DeleteTaskHandler(db *gorm.DB) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
-        taskIDStr := chi.URLParam(r, "taskID")
-        taskID, _ := strconv.ParseUint(taskIDStr, 10, 64)
+        userID := r.Context().Value("userID").(uint)
 
-        if err := services.DeleteTask(db, uint(taskID)); err != nil {
+        taskIDStr := chi.URLParam(r, "taskID")
+        taskIDUint64, err := strconv.ParseUint(taskIDStr, 10, 64)
+        if err != nil {
+            http.Error(w, "invalid task ID", http.StatusBadRequest)
+            return
+        }
+        taskID := uint(taskIDUint64)
+
+        // User ownership check
+        var task models.Task
+        if err := db.Where("id = ? AND user_id = ?", taskID, userID).First(&task).Error; err != nil {
+            http.Error(w, "task not found", http.StatusNotFound)
+            return
+        }
+
+        if err := services.DeleteTask(db, taskID); err != nil {
             http.Error(w, err.Error(), http.StatusInternalServerError)
             return
         }
@@ -124,8 +168,11 @@ func DeleteTaskHandler(db *gorm.DB) http.HandlerFunc {
     }
 }
 
+
 func AddSubtasktoTaskHandler(db *gorm.DB) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
+        userID := r.Context().Value("userID").(uint) 
+
         taskIDStr := chi.URLParam(r, "taskID")
         taskIDUint64, err := strconv.ParseUint(taskIDStr, 10, 64)
         if err != nil {
@@ -133,6 +180,13 @@ func AddSubtasktoTaskHandler(db *gorm.DB) http.HandlerFunc {
             return
         }
         taskID := uint(taskIDUint64)
+
+        // user wwnership check
+        var task models.Task
+        if err := db.Where("id = ? AND user_id = ?", taskID, userID).First(&task).Error; err != nil {
+            http.Error(w, "task not found", http.StatusNotFound)
+            return
+        }
 
         var input struct {
             Title string `json:"title"`
@@ -160,15 +214,36 @@ func AddSubtasktoTaskHandler(db *gorm.DB) http.HandlerFunc {
     }
 }
 
+
 func DeleteTaskSubtaskByTaskHandler(db *gorm.DB) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
+        userID := r.Context().Value("userID").(uint) 
+
         taskIDStr := chi.URLParam(r, "taskID")
         subIDStr := chi.URLParam(r, "subtaskID")
 
-        taskID, _ := strconv.ParseUint(taskIDStr, 10, 64)
-        subID, _ := strconv.ParseUint(subIDStr, 10, 64)
+        taskIDUint64, err := strconv.ParseUint(taskIDStr, 10, 64)
+        if err != nil {
+            http.Error(w, "invalid task ID", http.StatusBadRequest)
+            return
+        }
+        subIDUint64, err := strconv.ParseUint(subIDStr, 10, 64)
+        if err != nil {
+            http.Error(w, "invalid subtask ID", http.StatusBadRequest)
+            return
+        }
 
-        if err := services.DeleteTaskSubtaskByTask(db, uint(taskID), uint(subID)); err != nil {
+        taskID := uint(taskIDUint64)
+        subID := uint(subIDUint64)
+
+        // user ownership check
+        var task models.Task
+        if err := db.Where("id = ? AND user_id = ?", taskID, userID).First(&task).Error; err != nil {
+            http.Error(w, "task not found", http.StatusNotFound)
+            return
+        }
+
+        if err := services.DeleteTaskSubtaskByTask(db, taskID, subID); err != nil {
             http.Error(w, err.Error(), http.StatusBadRequest)
             return
         }
@@ -177,13 +252,34 @@ func DeleteTaskSubtaskByTaskHandler(db *gorm.DB) http.HandlerFunc {
     }
 }
 
-func ToggleSubtaskHandler(db *gorm.DB) http.HandlerFunc {
+
+func ToggleTaskSubtaskHandler(db *gorm.DB) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
+        userID := r.Context().Value("userID").(uint)
+
         taskIDStr := chi.URLParam(r, "taskID")
         subIDStr := chi.URLParam(r, "subtaskID")
 
-        taskID, _ := strconv.ParseUint(taskIDStr, 10, 64)
-        subID, _ := strconv.ParseUint(subIDStr, 10, 64)
+        taskIDUint64, err := strconv.ParseUint(taskIDStr, 10, 64)
+        if err != nil {
+            http.Error(w, "invalid task ID", http.StatusBadRequest)
+            return
+        }
+        subIDUint64, err := strconv.ParseUint(subIDStr, 10, 64)
+        if err != nil {
+            http.Error(w, "invalid subtask ID", http.StatusBadRequest)
+            return
+        }
+
+        taskID := uint(taskIDUint64)
+        subID := uint(subIDUint64)
+
+        //usr ownership check
+        var task models.Task
+        if err := db.Where("id = ? AND user_id = ?", taskID, userID).First(&task).Error; err != nil {
+            http.Error(w, "task not found", http.StatusNotFound)
+            return
+        }
 
         var input struct {
             Checked bool `json:"checked"`
@@ -194,7 +290,7 @@ func ToggleSubtaskHandler(db *gorm.DB) http.HandlerFunc {
             return
         }
 
-        if err := services.ToggleTaskSubtaskByTask(db, uint(taskID), uint(subID), input.Checked); err != nil {
+        if err := services.ToggleTaskSubtaskByTask(db, taskID, subID, input.Checked); err != nil {
             http.Error(w, err.Error(), http.StatusBadRequest)
             return
         }
@@ -202,5 +298,6 @@ func ToggleSubtaskHandler(db *gorm.DB) http.HandlerFunc {
         w.WriteHeader(http.StatusOK)
     }
 }
+
 
 

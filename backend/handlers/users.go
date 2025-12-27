@@ -10,6 +10,9 @@ import (
 "to-do-lister/utils"
 )
 
+
+// TODO:add password and username constraints (minimum length, not same as previous one?)
+
 func SignUpHandler(db *gorm.DB) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         var input struct {

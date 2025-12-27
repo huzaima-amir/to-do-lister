@@ -131,7 +131,6 @@ func ToggleTaskSubtaskByTask(db *gorm.DB, taskID, subtaskID uint, checked bool) 
 
 func UpdateTaskOverdueStatus(db *gorm.DB) error{// background function that runs in a goroutine for"ever"(for how long the code runs) 
 // and marks task as overdue if applicable
-// putting the logic in this function, but will initialize the goroutine with the forloop in the main function (database intialization issues)
     return db.Model(&models.Task{}). 
         Where("status != ?", "Finished").
         Where("deadline < ?", time.Now()).  //comparison operator for time.time only works in sql operations!!

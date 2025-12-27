@@ -24,7 +24,7 @@ func TaskRoutes(r chi.Router, db *gorm.DB) {
 
     //Subtasks
     r.Post("/{taskID}/subtasks", handlers.AddSubtasktoTaskHandler(db))
-    r.Put("/{taskID}/subtasks/{subtaskID}", handlers.ToggleSubtaskHandler(db))
+    r.Put("/{taskID}/subtasks/{subtaskID}", handlers.ToggleTaskSubtaskHandler(db))
     r.Delete("/{taskID}/subtasks/{subtaskID}", handlers.DeleteTaskSubtaskByTaskHandler(db))
 }
 
