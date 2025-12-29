@@ -47,9 +47,10 @@ func main() {
     r.Use(chimw.Recoverer)
 
     // Mount route groups
-    r.Route("/users", func(ur chi.Router) {
-        routes.UserRoutes(ur, db)
-    })
+    r.Route("/tasks", func(tr chi.Router) { routes.TaskRoutes(tr, db) }) 
+    r.Route("/events", func(er chi.Router) { routes.EventRoutes(er, db) }) 
+    r.Route("/tags", func(tg chi.Router) { routes.TagRoutes(tg, db) }) 
+    r.Route("/users", func(ur chi.Router) { routes.UserRoutes(ur, db) })
 
     //start server
     log.Println("Server running on :8080")
